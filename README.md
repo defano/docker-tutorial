@@ -20,7 +20,7 @@ A brief refresher on building images and managing containers.
 #### Build a Docker image from a Dockerfile
 `docker build -t <tag-name> <directory>` where `<tag-name>` is the name that will be assigned to this image and `<directory>` is the path to the directory containing the Dockerfile.
 
-* Docker will download any dependent images and build your image according to the Dockerfile. If all goes well, the last line produced by the command should read `Successfully built 351e2c3e7c5c` (your hash will vary).
+Docker will download any dependent images and build your image according to the Dockerfile. If all goes well, the last line produced by the command should read `Successfully built 351e2c3e7c5c` (your hash will vary).
 
 #### Listing images stored locally
 `docker images` will display all the images built on your machine. It will produce output like:
@@ -33,7 +33,7 @@ ubuntu              latest              6cc0fc2a5ee3        3 weeks ago         
 #### Create a container from an existing image
 `docker create -p <host-port>:<container-port> <image-name>` will create a container from the image tagged `<image-name>` where `<container-port` is an exposed port on the container and `<host-port>` is the port on the host machine that it should be mapped to. For example, if our container was running a web server on port 80 and we wanted to access that server through port 8080 on our host, we'd provide the argument `-p 8080:80`.
 
-* By default, Docker will assign a nonsensical (sometimes comical) name to your container, like `lactating_monkey`. You'll likely wish to refer to this container by name in the future and you can assign your own name using the `--name=` argument on the command line. For example, `docker create my-example-image --name=webserver`.
+By default, Docker will assign a nonsensical (sometimes comical) name to your container, like `lactating_monkey`. You'll likely wish to refer to this container by name in the future and you can assign your own name using the `--name=` argument on the command line. For example, `docker create my-example-image --name=webserver`.
 
 #### Listing containers
 * `docker ps -a` will show all containers (in any state) on the local machine.
@@ -48,12 +48,17 @@ fb6bcff347c8        my-example-image    "nginx"             7 minutes ago       
 #### Starting a container
 `docker run <container-name>` will start the container named `<container-name>`.
 
-* Had we not used the `--name` argument in the `docker create` command we would have to refer to this container using either a) the nonsensical name auto-assigned to it (`lactating_monkey`) or b) the container ID hash (something like `fb6bcff347c8`).
+Had we not used the `--name` argument in the `docker create` command we would have to refer to this container using either a) the nonsensical name auto-assigned to it (`lactating_monkey`) or b) the container ID hash (something like `fb6bcff347c8`).
+
+#### Opening a shell on a running container
+`docker exec -it <container-identifier> bash` will open a shell on the running container identified by `<container-identifier>` (a container name or ID).
+
+More generally, this command is executing the `bash` (shell) command on the container; the `-it` switch indicates that the command should be interactive and allocate a pseudo TTY.
 
 #### Stopping a container
 `docker stop <container-name>` will stop the running container named `<container-name>`.
 
-* Like with `docker start` you may substitute the container name with an ID hash prefix if you wish.
+As with `docker start` you may substitute the container name with an ID hash prefix if you wish.
 
 #### Helpful cleanup commands
 Typically one does not usually clean and rebuild everything, but when experimenting its often helpful to be able to return to a clean state.
@@ -122,5 +127,24 @@ In this example, the goal is to have our Spring Boot server read and write entri
 3. Create a container instance from the newly generated image with `docker create --name redis example/redis-img`
 4. Start the container with `docker start redis`. Note that we're not exposing any of the container's ports to the host operating system. Nevertheless, the Redis port (6379) will be accessible from the Spring Boot server which we will link to it.
 5. Return to the Spring Boot example: `cd ../spring-example`
-6. Since the Spring Boot example image has already been created, we don't need to re-run those commands. (And if you do, you'll find that Docker complains that the `example/spring-img` and `springserver` names are already in use.)
-7. Start the Spring Boot server and link it to the Redis container (already running) using `docker run --link redis:redishost -p 8080:8080 --name springredis example/spring-img`. This syntax should look pretty familiar at this point, with the addition of the `--link` switch. Link takes the name of a *running* container and the hostname to which its IP address should be assigned. In this case, our Redis container is going to be linked into the `springserver` container using the hostname `redishost` (as previously noted, Docker accomplishes this by writing a record into the `/etc/hosts` file like `redishost 192.168.1.90`). Now, our Redis-linked Spring Boot container can reach the Redis container by referring to it's hostname `redishost`. In fact, we could open a shell in the `springredis` container and `ping redishost`.
+6. Start the Spring Boot server and link it to the Redis container (already running) using `docker run --link redis:redishost -p 8080:8080 --name springredis example/spring-img`. (Since the Spring Boot example image has already been created, we don't need to re-run the `build` command.)
+
+At this point, our webserver container should be able to delegate to our Redis container for caching key/value pairs.
+
+Then...
+
+1. Smoke test our web server by fetching the "Hello Work" page again, `curl localhost:8080`.
+2. Put a key/value pair into the Redis cache with `curl 'localhost:8080/set?key=mykey&value=myvalue'`. If everything is working, the server should respond with `Set: mykey=myvalue`. <br>**Gotcha:** Note the use of single quotes around the curl command; this is required to escape the `&` from the shell.
+3. Verify that Redis has accepted our key/value pair by reading it back, `curl 'localhost:8080/get?key=mykey'`. The server should respond with `Get: mykey=myvalue`
+4. If you like, shut down both containers with `docker stop redis springredis`
+
+**What is `--link` actually doing?** Link takes the name of a running container and a hostname and assigns the IP address of the container to the hostname. Docker accomplishes this by writing a record into the linked container's `/etc/hosts`, file like:
+
+```
+172.17.0.9	 b8a2dc66e465
+127.0.0.1	  localhost
+::1	        localhost ip6-localhost ip6-loopback
+192.168.1.90   redishost
+```
+
+In this case, our Redis container is going to be linked into the `springserver` container using the hostname `redishost`. If you were to open a shell in the web server's container (use `docker exec -it springredis bash`) and examine the `/etc/host` file, you'd file a `redisthost` entry similar to that shown above. With this, our Spring Boot web app container can reach the Redis container by referring to it's hostname `redishost`.
