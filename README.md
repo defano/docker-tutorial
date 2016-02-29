@@ -141,10 +141,15 @@ Then...
 **What is `--link` actually doing?** Link takes the name of a running container and a hostname and assigns the IP address of the container to the hostname. Docker accomplishes this by writing a record into the linked container's `/etc/hosts`, file like:
 
 ```
-172.17.0.9	 b8a2dc66e465
-127.0.0.1	  localhost
-::1	        localhost ip6-localhost ip6-loopback
+172.17.0.9     b8a2dc66e465
+127.0.0.1      localhost
+::1            localhost ip6-localhost ip6-loopback
 192.168.1.90   redishost
 ```
 
 In this case, our Redis container is going to be linked into the `springserver` container using the hostname `redishost`. If you were to open a shell in the web server's container (use `docker exec -it springredis bash`) and examine the `/etc/host` file, you'd file a `redisthost` entry similar to that shown above. With this, our Spring Boot web app container can reach the Redis container by referring to it's hostname `redishost`.
+
+#### Example 5: Linking containers with Docker Compose
+Linking containers is pretty cool. That said, it's not hard to imagine how this could become quite unmanageable as the number of containers that need to communicate with one another grow within a distributed system. Docker provides the Compose tool for scripting the creation and linking of many containers (very handy for development and CI environments).
+
+In this example, we'll reproduce the Redis / Spring Web App system we created in the last example, but this time we'll provision it with Docker Compose.
