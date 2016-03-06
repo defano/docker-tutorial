@@ -6,12 +6,40 @@ Supplemental materials and reference guide for the Introduction to Docker presen
 
 Mac and Windows users will need to install the Docker Toolbox to run and control containers (download for [Windows](https://docs.docker.com/engine/installation/windows/) or [Mac OS](https://docs.docker.com/engine/installation/mac/)).
 
-Linux users can [install Docker directly](https://docs.docker.com/engine/installation/linux/) on various distributions.
+Linux users can [install Docker Engine directly](https://docs.docker.com/engine/installation/linux/) on various distributions.
 
 ##### A note for Mac and Windows users
-While you can't run Docker containers *directly* on your Mac or Windows machine, you can manage and control them as though they were. Docker Toolbox comes with a Mac and Windows native version of the `docker` command that knows how to proxy into the Docker Machine and control containers executing inside that "machine." (This was previously not possible on Windows with boot2docker; Docker Machine fixed this limitation.)
+While you can't run Docker containers *directly* on your Mac or Windows machine, you can manage and control them as though they were. Docker Toolbox comes with a Mac and Windows native version of the `docker` command that knows how to proxy into the Docker Machine and control containers executing inside that "machine" just as though they were executing on your host.
 
-*Why should I care?* This feature has the effect of letting native Mac and Windows processes directly control and manage Docker containers. This is especially useful if you're developing code in which your build scripts or integration tests expect to be able to build, start and run a container. Of course, keep in mind that your container-to-host port forwarding will not expose the container's port to your Mac or Windows, but only to your Docker Machine VM. If you need to access your container's ports directly from Mac OS or Windows, you'll need to forward those same ports from the Docker Machine guest OS to your host. (Sound of head exploding, here.)
+**Why should I care?** This feature has the effect of letting native Mac and Windows processes directly control and manage Docker containers. This is especially useful if you're developing code in which your build scripts or integration tests expect to be able to build, start and run a container.
+
+Keep in mind that your container-to-host port publishing will not expose the container's port through your Mac or Windows, but only ports to your Docker Machine VM. That is, a container which exposes port 8080 will be accessible from port 8080 on the Docker Machine, *not port 8080 on the Mac or Windows machine*. (Sound of head exploding, here.)
+
+To access your container's ports from Mac OS or Windows, you'll need to either:
+
+* Direct the request to the IP address of your Docker Machine (use `docker-machine ip` to determine its address), or
+* Forward the same ports your container exposes from the Docker Machine to your host OS (using VirtualBox, typically).
+
+For example, lets say you're a Mac user with Docker Toolbox installed and you've just started a container running a web server on port 8080. To reach the web server from a Mac OS terminal, you'd need to first determine the IP address of the Docker Machine:
+
+```
+$ docker-machine ip
+192.168.99.104
+```
+
+Then make your web request to this IP address:
+
+```
+$ curl 192.168.99.104:8080
+Hello World!
+```
+
+Of course, if you were to open a shell on the Docker Machine (either via the Quickstart Terminal or with `docker-machine ssh`) then you could access the ports via `localhost`:
+
+```
+$ curl localhost:8080
+Hello World!
+```
 
 ## Docker Command Reference
 
@@ -73,12 +101,12 @@ Whenever referring to an image or container by its ID hash (i.e., `fb6bcff347c8`
 To run these examples, you'll need a shell inside the Docker Machine and the contents of this repository. Get started by:
 
 1. Start a shell inside your Docker Machine by using the Docker Quickstart Terminal app that was installed on Mac and Windows (Linux users can skip this step). See the "Docker Quickstart Terminal" section of the [Windows](https://docs.docker.com/engine/installation/windows/) and [Mac OS](https://docs.docker.com/engine/installation/mac/) install guide for details.
-2. Clone this repository using the git command `git clone http://github.com/TBD`
+2. Clone this repository using the git command `git clone https://github.com/defano/docker-tutorial.git`
 
-As you work through these examples be sure to read, understand, and follow all safety rules that came with your power tools. Also, take a look at the example Dockerfiles. They're commented to explain what's happening in each step.
+As you work through these examples be sure to read, understand, and follow all safety rules that came with your power tools. Also, take a look at the example Dockerfiles. They're commented to explain what's happening at each step.
 
 #### Example 1: Static Web Server
-In this example, we'll create a Docker container based on the Ubuntu distribution, install the Nginx server on it and have it serve a single HTML document (one that will be "baked" into the Docker image).
+In this example, we'll create a Docker container from the Ubuntu distribution, install the Nginx server on it, and have it serve a single HTML document (one that will be "baked into" the Docker image).
 
 1. Enter the example directory: `cd webserver-example`
 2. Build a Docker image from the Dockerfile using `docker build -t example/nginx-img .` Upon success, this will have create a new Docker image called `example/nginx-img`.
@@ -141,10 +169,49 @@ Then...
 **What is `--link` actually doing?** Link takes the name of a running container and a hostname and assigns the IP address of the container to the hostname. Docker accomplishes this by writing a record into the linked container's `/etc/hosts`, file like:
 
 ```
-172.17.0.9	 b8a2dc66e465
-127.0.0.1	  localhost
-::1	        localhost ip6-localhost ip6-loopback
+172.17.0.9     b8a2dc66e465
+127.0.0.1      localhost
+::1            localhost ip6-localhost ip6-loopback
 192.168.1.90   redishost
 ```
 
-In this case, our Redis container is going to be linked into the `springserver` container using the hostname `redishost`. If you were to open a shell in the web server's container (use `docker exec -it springredis bash`) and examine the `/etc/host` file, you'd file a `redisthost` entry similar to that shown above. With this, our Spring Boot web app container can reach the Redis container by referring to it's hostname `redishost`.
+In this case, our Redis container is going to be linked into the `springserver` container using the hostname `redishost`. If you were to open a shell in the web server's container (use `docker exec -it springredis bash`) and examine the `/etc/host` file, you'd find a `redisthost` entry similar to that shown in the last line above. With this host entry in place, our Spring Boot web app container can reach the Redis container by referring to it's hostname `redishost`. Neat.
+
+#### Example 5: Orchestrating containers with Docker Compose
+Linking containers is pretty cool. That said, it's not hard to imagine how this could become quite unmanageable as the number of containers that need to communicate with one another grow within a distributed system. Docker provides the Compose tool for scripting the creation and linking of containers (very handy for development and CI environments).
+
+This time, we'll reproduce the Redis / Spring Web App system we created in the last example, but provision it with Docker Compose.
+
+Mac and Windows users should already have the Docker Compose tool installed (as a result of installing Docker Toolbox); Linux users may need to [install it directly](https://docs.docker.com/compose/install/).
+
+Note that the Docker Compose tool is installed on your host operating system (i.e., Mac or Windows), not the Docker Machine VM. If you've been working inside a shell on the VM (i.e., the Quickstart Terminal) you'll need to create a new terminal on your host, pull this repository onto your host and proceed with the following steps there.
+
+1. Enter the `compose-example` directory, `cd compose-example`.
+2. Examine the contents of the `docker-compose.yml` file in this directory; this file scripts how to build and link the Spring Boot and Redis containers.
+3. Fire up the system with `docker-compose up`. Provided all goes according to plan, you'll see both containers start up in "attached" mode (that is, their output is written to your terminal). Passing `-d` will run them in "detached" mode (as we've been doing when starting these containers manually).
+
+Then...
+
+1. Verify that both containers are running and linked just as you did in the last example: `curl 'localhost:8080/set?key=k&value=v'` followed by `curl 'localhost:8080/get?key=k'`
+
+## What next?
+
+We have not been able to cover every aspect--or even every tool--of the Docker ecosystem. Here are a few paths to explore on your own:
+
+#### Docker Swarm
+
+You may have noticed one glaring limitation in all of these examples and tools: All of our containers are running on the same physical machine. Creating, scaling, and managing a system of containers distributed across physical hosts introduces its own challenges.
+
+Docker Swarm is designed to manage container provisioning across hosts. You can learn more about it, [here](https://docs.docker.com/swarm/overview/).
+
+#### Docker Hub
+
+Each of our examples have built Docker images from a base image that "automagically" made it onto your host. Where did these Ubuntu distributions come from? Docker Hub. A repository--not unlike Maven Central, CPAN or Github--for publishing Docker images. Docker Hub is a terrific resource for getting started with Docker and virtually any other tool.
+
+Wanna experiment with Cassandra without having to figure out how to install and configure a basic instance? Use Docker Hub to find an open sourced image. Need a quick Node.JS installation to test some Javascript on? Find it on Docker Hub.
+
+Search for ready-to-use Docker images [on the web](https://hub.docker.com/explore/), or directly from the command line using `docker search <search-terms>`.
+
+After you've found an image you like, use the `docker pull <image-name>` to download it into your cache.
+
+And when you've created an image worth sharing with the world, publish it to Docker Hub with the `docker push` command.  
