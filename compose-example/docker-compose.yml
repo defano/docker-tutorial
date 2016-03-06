@@ -1,0 +1,29 @@
+# ------------------------------------------------------------------------------
+# Specifies the version of the docker-compose.yml syntax. Docker Compose v1.6.0
+# and later should specify '2' for this value, previous (legacy) versions should
+# specify '1'.
+# ------------------------------------------------------------------------------
+version: '2'
+
+# ------------------------------------------------------------------------------
+# Define the set of services we're going to compose
+# ------------------------------------------------------------------------------
+services:
+
+  # ----------------------------------------------------------------------------
+  # Define how to create and run the Spring Example web server
+  # ----------------------------------------------------------------------------
+  web:
+    build: ../spring-example  # Build the image from the Dockerfile in this dir
+    ports: # Publishes the exposed port on the Docker host
+     - "8080:8080"
+    depends_on: # This container needs Redis; Compose should start Redis first
+     - redis
+    links: # Link the Redis IP addr to the hostname 'redishost' in our container
+     - redis:redishost
+
+  # ----------------------------------------------------------------------------
+  # Define how to create and run the Redis server
+  # ----------------------------------------------------------------------------
+  redis:
+    build: ../redis-example # Not much to do; build this dir's Dockerfile
