@@ -105,6 +105,23 @@ To run these examples, you'll need a shell inside the Docker Machine and the con
 
 As you work through these examples be sure to read, understand, and follow all safety rules that came with your power tools. Also, take a look at the example Dockerfiles. They're commented to explain what's happening at each step.
 
+#### Example 0: Warmup Exercise
+Docker can be an amazingly useful tool without ever authoring a single Dockerfile. Just as one can find pre-built virtual machines online, one can use the Docker Hub (repository) to find and experiment with existing images.
+
+In this warmup exercise, we'll pull and run a copy of the [Oasis Chicago project](https://github.com/defano/oasis-chicago-njs). Oasis Chicago is an open-source visualization of business deserts in Chicago (created by me and my colleague [Ben Galewsky](https://github.com/BenGalewsky)), which was an entrant and winner in [ChallengePost's Big Data for Social Good](http://devpost.com/software/oasis) hackathon.
+
+1. `docker pull defano/desert-chicago-njs` to fetch this image from the Docker Hub. You can use the `docker search` command or the search capability on the [Docker Hub website](https://hub.docker.com) to [find this](https://hub.docker.com/r/defano/desert-chicago-njs/) and other available images.
+2. `docker run -p 5000:5000 defano/desert-chicago-njs` to create and run an instance of this image (as a container), exposing port 5000 to the host. (This web app runs on port 5000, which we're mapping to port 5000 on the host.)
+
+Then...
+
+1. While still inside the Docker Quickstart Terminal, run `curl localhost:5000` to fetch the app's index.html contents.
+2. Now, lets try to view the app on a browser running not on the Docker Machine VM, but on your host operating system.
+    * **For Linux users:** Since the container is running directly on your machine (and not inside of a VM), simply open a browser and go to `localhost:5000`. You should see Oasis Chicago app appear in the browser.
+    * **For Mac and Windows users:** Open a terminal/DOS prompt on your Mac or Windows machine (*not* a Quickstart Terminal, which opens a shell inside the Docker Machine). Use `docker-machine ip` to determine the IP address of your Docker Machine VM. (If you receive an error about 'no default machine', use the `docker-machine ls` command to determine the name of your VM, then use `docker-machine ip <machine-name>` instead.) Finally, open a browser and navigate to that IP address, port 5000 (e.g., `192.168.99.104:5000`). You should see the Oasis Chicago app appear in the browser.
+
+If you've run into trouble getting this example to work, you'll want to work through those issues before continuing as they likely indicate an installation or setup problem.
+
 #### Example 1: Static Web Server
 In this example, we'll create a Docker container from the Ubuntu distribution, install the Nginx server on it, and have it serve a single HTML document (one that will be "baked into" the Docker image).
 
@@ -162,7 +179,7 @@ At this point, our webserver container should be able to delegate to our Redis c
 Then...
 
 1. Smoke test our web server by fetching the "Hello Work" page again, `curl localhost:8080`.
-2. Put a key/value pair into the Redis cache with `curl 'localhost:8080/set?key=mykey&value=myvalue'`. If everything is working, the server should respond with `Set: mykey=myvalue`. <br>**Gotcha:** Note the use of single quotes around the curl command; this is required to escape the `&` from the shell.
+2. Put a key/value pair into the Redis cache with `curl 'localhost:8080/set?key=mykey&value=myvalue'`. If everything is working, the server should respond with `Set: mykey=myvalue`. <br>_**Gotcha:**_ Note the use of single quotes around the curl command; this is required to escape `&` from the shell.
 3. Verify that Redis has accepted our key/value pair by reading it back, `curl 'localhost:8080/get?key=mykey'`. The server should respond with `Get: mykey=myvalue`
 4. If you like, shut down both containers with `docker stop redis springredis`
 
@@ -203,15 +220,3 @@ We have not been able to cover every aspect--or even every tool--of the Docker e
 You may have noticed one glaring limitation in all of these examples and tools: All of our containers are running on the same physical machine. Creating, scaling, and managing a system of containers distributed across physical hosts introduces its own challenges.
 
 Docker Swarm is designed to manage container provisioning across hosts. You can learn more about it, [here](https://docs.docker.com/swarm/overview/).
-
-#### Docker Hub
-
-Each of our examples have built Docker images from a base image that "automagically" made it onto your host. Where did these Ubuntu distributions come from? Docker Hub. A repository--not unlike Maven Central, CPAN or Github--for publishing Docker images. Docker Hub is a terrific resource for getting started with Docker and virtually any other tool.
-
-Wanna experiment with Cassandra without having to figure out how to install and configure a basic instance? Use Docker Hub to find an open sourced image. Need a quick Node.JS installation to test some Javascript on? Find it on Docker Hub.
-
-Search for ready-to-use Docker images [on the web](https://hub.docker.com/explore/), or directly from the command line using `docker search <search-terms>`.
-
-After you've found an image you like, use the `docker pull <image-name>` to download it into your cache.
-
-And when you've created an image worth sharing with the world, publish it to Docker Hub with the `docker push` command.  
