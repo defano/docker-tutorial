@@ -11,7 +11,9 @@ Linux users can [install Docker Engine directly](https://docs.docker.com/engine/
 ##### A note for Mac and Windows users
 While you can't run Docker containers *directly* on your Mac or Windows machine, you can manage and control them as though they were. Docker Toolbox comes with a Mac and Windows native version of the `docker` command that knows how to proxy into the Docker Machine and control containers executing inside that "machine" just as though they were executing on your host.
 
-**Why should I care?** This feature has the effect of letting native Mac and Windows processes directly control and manage Docker containers. This is especially useful if you're developing code in which your build scripts or integration tests expect to be able to build, start and run a container.
+Why should I care? This feature has the effect of letting native Mac and Windows processes directly control and manage Docker containers. This is especially useful if you're developing code in which your build scripts or integration tests expect to be able to build, start and run a container.
+
+_Beware the Port Spaghetti_
 
 Keep in mind that your container-to-host port publishing will not expose the container's port through your Mac or Windows, but only ports to your Docker Machine VM. That is, a container which exposes port 8080 will be accessible from port 8080 on the Docker Machine, *not port 8080 on the Mac or Windows machine*. (Sound of head exploding, here.)
 
@@ -210,13 +212,3 @@ Note that the Docker Compose tool is installed on your host operating system (i.
 Then...
 
 1. Verify that both containers are running and linked just as you did in the last example: `curl 'localhost:8080/set?key=k&value=v'` followed by `curl 'localhost:8080/get?key=k'`
-
-## What next?
-
-We have not been able to cover every aspect--or even every tool--of the Docker ecosystem. Here are a few paths to explore on your own:
-
-#### Docker Swarm
-
-You may have noticed one glaring limitation in all of these examples and tools: All of our containers are running on the same physical machine. Creating, scaling, and managing a system of containers distributed across physical hosts introduces its own challenges.
-
-Docker Swarm is designed to manage container provisioning across hosts. You can learn more about it, [here](https://docs.docker.com/swarm/overview/).
