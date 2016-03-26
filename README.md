@@ -146,9 +146,9 @@ Example 1 illustrated how we could set up a web server in Docker but this was cl
 4. Start the container `docker start volumeserver`
 
 Then...
+
 1. `curl localhost:8080` to see the HTML contents of `www/index.html` returned.
-2. Try modifying the contents of `www/index.html` and making the same `curl`
-request (you should see your changes reflected in the output)
+2. Try modifying the contents of `www/index.html` and making the same `curl` request (you should see your changes reflected in the output)
 3. Try adding new files to the `www/` directory. For example,
 `echo '<html>Goodbye Cruel World</html>' > www/goodbye.html` then request `curl localhost:8080/goodbye.html`
 4. Stop the container using `docker stop volumeserver` and, if desired, blow away the container and image. You remember how to do that, right? (Hint: `docker rm` and `docker rmi`)
