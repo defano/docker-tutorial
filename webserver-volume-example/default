@@ -5,6 +5,9 @@ server {
     # Make site accessible from http://localhost/
     server_name localhost;
 
+    # Prevent some VirtualBox weirdness
+    sendfile off;
+
     location / {
         # First attempt to serve request as file, then
         # as directory, then fall back to index.html

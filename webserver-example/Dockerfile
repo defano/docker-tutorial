@@ -35,8 +35,8 @@ RUN apt-get -y install nginx
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 
 # Create SSL and document root directories
-RUN mkdir /etc/nginx/ssl
-RUN mkdir /var/www
+RUN mkdir -p /etc/nginx/ssl
+RUN mkdir -p /var/www
 
 
 # ------------------------------------------------------------------------------
