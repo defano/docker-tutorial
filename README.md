@@ -4,6 +4,8 @@ Supplemental materials and lab instructions for the Chicago Coders Conference In
 
 All materials referenced here (except for the installation materials provided on the thumb drive) are available online at [http://github.com/defano/docker-tutorial](http://github.com/defano/docker-tutorial).
 
+**Chicago Coders Conference attendees:** Before beginning these lab exercises, copy the contents of the provided thumb drive to your computer's home directory.
+
 ## A note for Mac and Windows users
 While you can't run Docker containers *directly* on your Mac or Windows machine (yet... there's a Windows beta in the works), you can manage and control them as though they were. Docker Toolbox comes with a Mac and Windows native version of the `docker` command that knows how to proxy into a Docker Machine and control containers executing inside that "machine" just as though they were executing on your host.
 
@@ -36,7 +38,7 @@ Hello World!
 
 Start by installing Docker Toolbox on Mac and Windows machines. Linux users should install Docker directly ([see instructions](https://docs.docker.com/engine/installation/linux/)) and then proceed to Part 2.
 
-1. Locate and execute the Docker Toolbox installer in the materials provided on the thumb drive.
+1. Locate and execute the Docker Toolbox installer in the materials provided on the thumb drive. Accept all the default installation configuration options. 
 2. Upon completion, launch the newly installed "Docker Quickstart Terminal" application. The first time you launch this it will create and configure a Docker Machine (VM) for you. You should see something like:
 ```
 Running pre-create checks...
@@ -159,7 +161,7 @@ Example 1 illustrated how we could set up a web server in Docker but this was cl
 
 1. Enter the example directory: `cd webserver-volume-example`
 2. Build the image using `docker build -t example/nginx-volume-img .`
-3. Create a container from this image, `docker create -p 8080:80 --name=nginx-volume -v /path/to/example/www:/var/www example/nginx-volume-img` where `path/to/example/www` is the absolute path to the `www` directory inside this example. (Sorry Charlie, you can't use a relative path here.)
+3. Create a container from this image, `docker create -p 8080:80 --name=nginx-volume -v /path/to/webserver-volume-example/www:/var/www example/nginx-volume-img` where `path/to/example/www` is the absolute path to the `www` directory inside this example. (Sorry Charlie, you can't use a relative path here.)
 4. Start the container with `docker start nginx-volume`
 
 Then...
