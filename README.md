@@ -1,7 +1,5 @@
 # An introduction to Docker
 
-Supplemental materials and lab instructions for the Chicago Coders Conference Introduction to Docker presentation.
-
 All materials referenced here (except for the installation materials provided on the thumb drive) are available online at [http://github.com/defano/docker-tutorial](http://github.com/defano/docker-tutorial).
 
 **Chicago Coders Conference attendees:** Before beginning these lab exercises, copy the contents of the provided thumb drive to your computer's home directory.
